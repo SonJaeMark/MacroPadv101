@@ -1,7 +1,10 @@
 #pragma once
 
+#include <vector>
+
 #include "IMacroButton.h"
 #include "IButtonDriver.h"
+#include "IButtonListener.h"
 #include "IMacro.h"
 #include "IKeyboardDriver.h"
 
@@ -14,6 +17,9 @@ public:
     void tick() override;
 
     bool isPressed() const override;
+
+    void addButtonListener(
+        IButtonListener& listener) override;
 
     MacroButton& onClick(IMacro& macro);
     MacroButton& onDoubleClick(IMacro& macro);
@@ -28,7 +34,8 @@ private:
 
     IKeyboardDriver* keyboardDriver = nullptr;
 
-    IMacro* pressMacro = nullptr;
+    std::vector<IButtonListener*> listeners;
+
     IMacro* clickMacro = nullptr;
     IMacro* doubleClickMacro = nullptr;
     IMacro* multiClickMacro = nullptr;
@@ -36,4 +43,7 @@ private:
     IMacro* longPressStartMacro = nullptr;
     IMacro* longPressStopMacro = nullptr;
     IMacro* longPressMacro = nullptr;
+
+    void notifyButtonPress();
+    void notifyButtonRelease();
 };

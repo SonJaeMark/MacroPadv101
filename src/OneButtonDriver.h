@@ -16,6 +16,14 @@ public:
 
     bool isPressed() const override;
 
+    // Physical events
+    void onPress(
+        const std::function<void()>& callback) override;
+
+    void onRelease(
+        const std::function<void()>& callback) override;
+
+    // Gestures
     void onClick(
         const std::function<void()>& callback) override;
 
@@ -41,14 +49,19 @@ private:
 
     OneButton button;
 
+    // Physical events
+    std::function<void()> pressCallback;
+    std::function<void()> releaseCallback;
+
+    // Gestures
     std::function<void()> clickCallback;
     std::function<void()> doubleClickCallback;
     std::function<void()> multiClickCallback;
+
     std::function<void()> longPressStartCallback;
     std::function<void()> longPressStopCallback;
     std::function<void()> longPressCallback;
-    std::function<void()> idleCallback;
-    
+
     static void handlePress(void* parameter);
 
     static void handleClick(void* parameter);
@@ -62,5 +75,4 @@ private:
     static void handleLongPressStop(void* parameter);
 
     static void handleLongPress(void* parameter);
-
 };

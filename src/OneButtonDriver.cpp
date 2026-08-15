@@ -1,5 +1,7 @@
 #include "OneButtonDriver.h"
-#include <OneButton.h>
+
+#include <Arduino.h>
+
 
 OneButtonDriver::OneButtonDriver(uint8_t pin)
     : pin(pin),
@@ -10,7 +12,14 @@ OneButtonDriver::OneButtonDriver(uint8_t pin)
 
 void OneButtonDriver::begin()
 {
-    // Internal only: track the physical button state.
+    /*
+     * OneButton handles physical press detection.
+     *
+     * There is no attachRelease() in the installed
+     * OneButton library, so release detection is
+     * handled manually in tick().
+     */
+
     button.attachPress(
         handlePress,
         static_cast<void*>(this)
@@ -20,7 +29,30 @@ void OneButtonDriver::begin()
 
 void OneButtonDriver::tick()
 {
+    /*
+     * Let OneButton process its normal gestures.
+     */
     button.tick();
+
+
+    /*
+     * Detect physical release ourselves.
+     *
+     * The button is configured as active LOW:
+     *
+     * LOW  = pressed
+     * HIGH = released
+     *
+     * Only generate the release event when we were
+     * previously pressed.
+     */
+    if (pressed && digitalRead(pin) == HIGH)
+    {
+        pressed = false;
+
+        if (releaseCallback)
+            releaseCallback();
+    }
 }
 
 
@@ -29,6 +61,32 @@ bool OneButtonDriver::isPressed() const
     return pressed;
 }
 
+
+// ============================================================
+// Physical press
+// ============================================================
+
+void OneButtonDriver::onPress(
+    const std::function<void()>& callback)
+{
+    pressCallback = callback;
+}
+
+
+// ============================================================
+// Physical release
+// ============================================================
+
+void OneButtonDriver::onRelease(
+    const std::function<void()>& callback)
+{
+    releaseCallback = callback;
+}
+
+
+// ============================================================
+// Click
+// ============================================================
 
 void OneButtonDriver::onClick(
     const std::function<void()>& callback)
@@ -42,6 +100,10 @@ void OneButtonDriver::onClick(
 }
 
 
+// ============================================================
+// Double click
+// ============================================================
+
 void OneButtonDriver::onDoubleClick(
     const std::function<void()>& callback)
 {
@@ -53,6 +115,10 @@ void OneButtonDriver::onDoubleClick(
     );
 }
 
+
+// ============================================================
+// Multi click
+// ============================================================
 
 void OneButtonDriver::onMultiClick(
     const std::function<void()>& callback)
@@ -66,6 +132,10 @@ void OneButtonDriver::onMultiClick(
 }
 
 
+// ============================================================
+// Long press start
+// ============================================================
+
 void OneButtonDriver::onLongPressStart(
     const std::function<void()>& callback)
 {
@@ -77,6 +147,10 @@ void OneButtonDriver::onLongPressStart(
     );
 }
 
+
+// ============================================================
+// Long press stop
+// ============================================================
 
 void OneButtonDriver::onLongPressStop(
     const std::function<void()>& callback)
@@ -90,6 +164,10 @@ void OneButtonDriver::onLongPressStop(
 }
 
 
+// ============================================================
+// During long press
+// ============================================================
+
 void OneButtonDriver::onLongPress(
     const std::function<void()>& callback)
 {
@@ -102,76 +180,106 @@ void OneButtonDriver::onLongPress(
 }
 
 
-/*
- * Static callback bridges
- */
+// ============================================================
+// Internal physical press handler
+// ============================================================
 
 void OneButtonDriver::handlePress(void* parameter)
 {
-    auto* driver = static_cast<OneButtonDriver*>(parameter);
+    auto* driver =
+        static_cast<OneButtonDriver*>(parameter);
+
+    /*
+     * Prevent duplicate press notifications.
+     */
+    if (driver->pressed)
+        return;
 
     driver->pressed = true;
+
+    if (driver->pressCallback)
+        driver->pressCallback();
 }
 
 
+// ============================================================
+// Click
+// ============================================================
+
 void OneButtonDriver::handleClick(void* parameter)
 {
-    auto* driver = static_cast<OneButtonDriver*>(parameter);
-
-    driver->pressed = false;
+    auto* driver =
+        static_cast<OneButtonDriver*>(parameter);
 
     if (driver->clickCallback)
         driver->clickCallback();
 }
 
 
+// ============================================================
+// Double click
+// ============================================================
+
 void OneButtonDriver::handleDoubleClick(void* parameter)
 {
-    auto* driver = static_cast<OneButtonDriver*>(parameter);
-
-    driver->pressed = false;
+    auto* driver =
+        static_cast<OneButtonDriver*>(parameter);
 
     if (driver->doubleClickCallback)
         driver->doubleClickCallback();
 }
 
 
+// ============================================================
+// Multi click
+// ============================================================
+
 void OneButtonDriver::handleMultiClick(void* parameter)
 {
-    auto* driver = static_cast<OneButtonDriver*>(parameter);
-
-    driver->pressed = false;
+    auto* driver =
+        static_cast<OneButtonDriver*>(parameter);
 
     if (driver->multiClickCallback)
         driver->multiClickCallback();
 }
 
 
+// ============================================================
+// Long press start
+// ============================================================
+
 void OneButtonDriver::handleLongPressStart(void* parameter)
 {
-    auto* driver = static_cast<OneButtonDriver*>(parameter);
-
-    // already true from handlePress()
+    auto* driver =
+        static_cast<OneButtonDriver*>(parameter);
 
     if (driver->longPressStartCallback)
         driver->longPressStartCallback();
 }
 
 
+// ============================================================
+// Long press stop
+// ============================================================
+
 void OneButtonDriver::handleLongPressStop(void* parameter)
 {
-    auto* driver = static_cast<OneButtonDriver*>(parameter);
-
-    driver->pressed = false;
+    auto* driver =
+        static_cast<OneButtonDriver*>(parameter);
 
     if (driver->longPressStopCallback)
         driver->longPressStopCallback();
 }
 
 
+// ============================================================
+// During long press
+// ============================================================
+
 void OneButtonDriver::handleLongPress(void* parameter)
 {
-    auto* driver = static_cast<OneButtonDriver*>(parameter);
+    auto* driver =
+        static_cast<OneButtonDriver*>(parameter);
 
     if (driver->longPressCallback)
         driver->longPressCallback();

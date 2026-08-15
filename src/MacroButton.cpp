@@ -9,9 +9,27 @@ MacroButton::MacroButton(IButtonDriver& driver)
 
 void MacroButton::begin(IKeyboardDriver& keyboard)
 {
-    this->keyboardDriver = &keyboard;
+    keyboardDriver = &keyboard;
 
     driver.begin();
+
+    // ========================================================
+    // Physical button events
+    // ========================================================
+
+    driver.onPress([this]()
+    {
+        notifyButtonPress();
+    });
+
+    driver.onRelease([this]()
+    {
+        notifyButtonRelease();
+    });
+
+    // ========================================================
+    // Click
+    // ========================================================
 
     driver.onClick([this]()
     {
@@ -24,6 +42,10 @@ void MacroButton::begin(IKeyboardDriver& keyboard)
         clickMacro->execute(*keyboardDriver);
     });
 
+    // ========================================================
+    // Double click
+    // ========================================================
+
     driver.onDoubleClick([this]()
     {
         if (doubleClickMacro == nullptr)
@@ -34,6 +56,10 @@ void MacroButton::begin(IKeyboardDriver& keyboard)
 
         doubleClickMacro->execute(*keyboardDriver);
     });
+
+    // ========================================================
+    // Multi click
+    // ========================================================
 
     driver.onMultiClick([this]()
     {
@@ -46,6 +72,10 @@ void MacroButton::begin(IKeyboardDriver& keyboard)
         multiClickMacro->execute(*keyboardDriver);
     });
 
+    // ========================================================
+    // Long press start
+    // ========================================================
+
     driver.onLongPressStart([this]()
     {
         if (longPressStartMacro == nullptr)
@@ -57,16 +87,9 @@ void MacroButton::begin(IKeyboardDriver& keyboard)
         longPressStartMacro->execute(*keyboardDriver);
     });
 
-    driver.onLongPressStop([this]()
-    {
-        if (longPressStopMacro == nullptr)
-            return;
-
-        if (keyboardDriver == nullptr)
-            return;
-
-        longPressStopMacro->execute(*keyboardDriver);
-    });
+    // ========================================================
+    // Long press
+    // ========================================================
 
     driver.onLongPress([this]()
     {
@@ -77,6 +100,21 @@ void MacroButton::begin(IKeyboardDriver& keyboard)
             return;
 
         longPressMacro->execute(*keyboardDriver);
+    });
+
+    // ========================================================
+    // Long press stop
+    // ========================================================
+
+    driver.onLongPressStop([this]()
+    {
+        if (longPressStopMacro == nullptr)
+            return;
+
+        if (keyboardDriver == nullptr)
+            return;
+
+        longPressStopMacro->execute(*keyboardDriver);
     });
 }
 
@@ -92,6 +130,45 @@ bool MacroButton::isPressed() const
     return driver.isPressed();
 }
 
+
+// ============================================================
+// Button listeners
+// ============================================================
+
+void MacroButton::addButtonListener(
+    IButtonListener& listener)
+{
+    listeners.push_back(&listener);
+}
+
+
+void MacroButton::notifyButtonPress()
+{
+    for (IButtonListener* listener : listeners)
+    {
+        if (listener == nullptr)
+            continue;
+
+        listener->onButtonPress(*this);
+    }
+}
+
+
+void MacroButton::notifyButtonRelease()
+{
+    for (IButtonListener* listener : listeners)
+    {
+        if (listener == nullptr)
+            continue;
+
+        listener->onButtonRelease(*this);
+    }
+}
+
+
+// ============================================================
+// Macro assignments
+// ============================================================
 
 MacroButton& MacroButton::onClick(IMacro& macro)
 {
