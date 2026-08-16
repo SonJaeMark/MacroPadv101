@@ -1,7 +1,5 @@
 #pragma once
 
-class IButtonListener;
-
 class IMacroButton
 {
 public:
@@ -11,6 +9,10 @@ public:
 
     virtual bool isPressed() const = 0;
 
-    virtual void addButtonListener(
-        IButtonListener& listener) = 0;
+    // Chord control
+    virtual void suppressGestures() = 0;
+
+    virtual void releaseGestures() = 0;
+
+    virtual bool gesturesSuppressed() const = 0;
 };

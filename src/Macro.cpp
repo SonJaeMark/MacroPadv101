@@ -44,42 +44,120 @@ Macro& Macro::callback(const std::function<void()>& fn)
     return *this;
 }
 
+// void Macro::execute(IKeyboardDriver& driver)
+// {
+//     for (const Action& action : actions)
+//     {
+//         switch (action.type)
+//         {
+//         case ActionType::PRESS:
+//             driver.press(action.key);
+//             break;
+
+//         case ActionType::RELEASE:
+//             driver.release(action.key);
+//             break;
+
+//         case ActionType::CLICK:
+//             driver.click(action.key);
+//             break;
+
+//         case ActionType::RELEASE_ALL:
+//             driver.releaseAll();
+//             break;
+
+//         case ActionType::DELAY:
+//             ::delay(action.delay);
+//             break;
+
+//         case ActionType::TYPE_TEXT:
+//             driver.type(action.text);
+//             break;
+
+//         case ActionType::CALLBACK:
+//             if (action.callback)
+//             {
+//                 action.callback();
+//             }
+//             break;
+//         }
+//     }
+// }
+
 void Macro::execute(IKeyboardDriver& driver)
 {
+    Serial.println("===== MACRO EXECUTE =====");
+
+    int index = 0;
+
     for (const Action& action : actions)
     {
+        Serial.print("ACTION ");
+        Serial.print(index++);
+        Serial.print(" = ");
+
         switch (action.type)
         {
-        case ActionType::PRESS:
-            driver.press(action.key);
-            break;
+            case ActionType::PRESS:
+                Serial.println("PRESS");
 
-        case ActionType::RELEASE:
-            driver.release(action.key);
-            break;
+                Serial.print("KEY = ");
+                Serial.println(action.key);
 
-        case ActionType::CLICK:
-            driver.click(action.key);
-            break;
+                driver.press(action.key);
+                break;
 
-        case ActionType::RELEASE_ALL:
-            driver.releaseAll();
-            break;
 
-        case ActionType::DELAY:
-            ::delay(action.delay);
-            break;
+            case ActionType::RELEASE:
+                Serial.println("RELEASE");
 
-        case ActionType::TYPE_TEXT:
-            driver.type(action.text);
-            break;
+                Serial.print("KEY = ");
+                Serial.println(action.key);
 
-        case ActionType::CALLBACK:
-            if (action.callback)
-            {
-                action.callback();
-            }
-            break;
+                driver.release(action.key);
+                break;
+
+
+            case ActionType::CLICK:
+                Serial.println("CLICK");
+
+                Serial.print("KEY = ");
+                Serial.println(action.key);
+
+                driver.click(action.key);
+                break;
+
+
+            case ActionType::RELEASE_ALL:
+                Serial.println("RELEASE_ALL");
+
+                driver.releaseAll();
+                break;
+
+
+            case ActionType::DELAY:
+                Serial.println("DELAY");
+
+                delay(action.delay);
+                break;
+
+
+            case ActionType::TYPE_TEXT:
+                Serial.println("TYPE_TEXT");
+
+                driver.type(action.text);
+                break;
+
+
+            case ActionType::CALLBACK:
+                Serial.println("CALLBACK");
+
+                if (action.callback)
+                    action.callback();
+
+                break;
         }
     }
+
+    Serial.println("=========================");
 }

@@ -3,37 +3,66 @@
 #include <vector>
 
 #include "IButtonListener.h"
-#include "Chord.h"
+#include "IMacroButton.h"
+#include "IMacro.h"
+#include "IKeyboardDriver.h"
 
-class IKeyboardDriver;
+struct Chord
+{
+    std::vector<IMacroButton*> buttons;
+
+    IMacro* macro = nullptr;
+
+    bool executed = false;
+};
+
 
 class ChordManager : public IButtonListener
 {
 public:
-    explicit ChordManager(IKeyboardDriver& keyboard);
 
     void addChord(
         const std::vector<IMacroButton*>& buttons,
         IMacro& macro);
 
+
+    void update(
+        IKeyboardDriver& driver);
+
+
+    // IButtonListener
+
     void onButtonPress(
         IMacroButton& button) override;
+
 
     void onButtonRelease(
         IMacroButton& button) override;
 
+
 private:
-    IKeyboardDriver& keyboard;
 
     std::vector<Chord> chords;
 
-    std::vector<IMacroButton*> pressedButtons;
+    IKeyboardDriver* keyboardDriver = nullptr;
 
-    bool containsPressed(
-        IMacroButton* button) const;
 
-    bool chordIsPressed(
+    bool allPressed(
         const Chord& chord) const;
 
-    void executeChord(Chord& chord);
+
+    bool allReleased(
+        const Chord& chord) const;
+
+
+    void executeChord(
+        Chord& chord);
+
+
+    void suppressChordButtons(
+        const Chord& chord);
+
+
+    void releaseChordButtons(
+        const Chord& chord);
 };

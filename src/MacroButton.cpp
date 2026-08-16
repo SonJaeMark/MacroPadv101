@@ -7,123 +7,182 @@ MacroButton::MacroButton(IButtonDriver& driver)
 }
 
 
-void MacroButton::begin(IKeyboardDriver& keyboard)
+// ============================================================
+// Begin
+// ============================================================
+
+void MacroButton::begin(
+    IKeyboardDriver& keyboard)
 {
     keyboardDriver = &keyboard;
 
     driver.begin();
 
+
     // ========================================================
-    // Physical button events
+    // Physical press
     // ========================================================
 
-    driver.onPress([this]()
-    {
-        notifyButtonPress();
-    });
+    driver.onPress(
+        [this]()
+        {
+            handlePress();
+        }
+    );
 
-    driver.onRelease([this]()
-    {
-        notifyButtonRelease();
-    });
+
+    // ========================================================
+    // Physical release
+    // ========================================================
+
+    driver.onRelease(
+        [this]()
+        {
+            handleRelease();
+        }
+    );
+
 
     // ========================================================
     // Click
     // ========================================================
 
-    driver.onClick([this]()
-    {
-        if (clickMacro == nullptr)
-            return;
+    driver.onClick(
+        [this]()
+        {
+            if (gesturesSuppressedFlag)
+                return;
 
-        if (keyboardDriver == nullptr)
-            return;
+            if (clickMacro == nullptr)
+                return;
 
-        clickMacro->execute(*keyboardDriver);
-    });
+            if (keyboardDriver == nullptr)
+                return;
+
+            clickMacro->execute(*keyboardDriver);
+        }
+    );
+
 
     // ========================================================
     // Double click
     // ========================================================
 
-    driver.onDoubleClick([this]()
-    {
-        if (doubleClickMacro == nullptr)
-            return;
+    driver.onDoubleClick(
+        [this]()
+        {
+            if (gesturesSuppressedFlag)
+                return;
 
-        if (keyboardDriver == nullptr)
-            return;
+            if (doubleClickMacro == nullptr)
+                return;
 
-        doubleClickMacro->execute(*keyboardDriver);
-    });
+            if (keyboardDriver == nullptr)
+                return;
+
+            doubleClickMacro->execute(*keyboardDriver);
+        }
+    );
+
 
     // ========================================================
     // Multi click
     // ========================================================
 
-    driver.onMultiClick([this]()
-    {
-        if (multiClickMacro == nullptr)
-            return;
+    driver.onMultiClick(
+        [this]()
+        {
+            if (gesturesSuppressedFlag)
+                return;
 
-        if (keyboardDriver == nullptr)
-            return;
+            if (multiClickMacro == nullptr)
+                return;
 
-        multiClickMacro->execute(*keyboardDriver);
-    });
+            if (keyboardDriver == nullptr)
+                return;
+
+            multiClickMacro->execute(*keyboardDriver);
+        }
+    );
+
 
     // ========================================================
     // Long press start
     // ========================================================
 
-    driver.onLongPressStart([this]()
-    {
-        if (longPressStartMacro == nullptr)
-            return;
+    driver.onLongPressStart(
+        [this]()
+        {
+            if (gesturesSuppressedFlag)
+                return;
 
-        if (keyboardDriver == nullptr)
-            return;
+            if (longPressStartMacro == nullptr)
+                return;
 
-        longPressStartMacro->execute(*keyboardDriver);
-    });
+            if (keyboardDriver == nullptr)
+                return;
+
+            longPressStartMacro->execute(*keyboardDriver);
+        }
+    );
+
 
     // ========================================================
     // Long press
     // ========================================================
 
-    driver.onLongPress([this]()
-    {
-        if (longPressMacro == nullptr)
-            return;
+    driver.onLongPress(
+        [this]()
+        {
+            if (gesturesSuppressedFlag)
+                return;
 
-        if (keyboardDriver == nullptr)
-            return;
+            if (longPressMacro == nullptr)
+                return;
 
-        longPressMacro->execute(*keyboardDriver);
-    });
+            if (keyboardDriver == nullptr)
+                return;
+
+            longPressMacro->execute(*keyboardDriver);
+        }
+    );
+
 
     // ========================================================
     // Long press stop
     // ========================================================
 
-    driver.onLongPressStop([this]()
-    {
-        if (longPressStopMacro == nullptr)
-            return;
+    driver.onLongPressStop(
+        [this]()
+        {
+            if (gesturesSuppressedFlag)
+                return;
 
-        if (keyboardDriver == nullptr)
-            return;
+            if (longPressStopMacro == nullptr)
+                return;
 
-        longPressStopMacro->execute(*keyboardDriver);
-    });
+            if (keyboardDriver == nullptr)
+                return;
+
+            longPressStopMacro->execute(*keyboardDriver);
+        }
+    );
 }
 
+
+// ============================================================
+// Tick
+// ============================================================
 
 void MacroButton::tick()
 {
     driver.tick();
 }
 
+
+// ============================================================
+// State
+// ============================================================
 
 bool MacroButton::isPressed() const
 {
@@ -132,7 +191,65 @@ bool MacroButton::isPressed() const
 
 
 // ============================================================
-// Button listeners
+// Gesture configuration
+// ============================================================
+
+MacroButton& MacroButton::onClick(
+    IMacro& macro)
+{
+    clickMacro = &macro;
+
+    return *this;
+}
+
+
+MacroButton& MacroButton::onDoubleClick(
+    IMacro& macro)
+{
+    doubleClickMacro = &macro;
+
+    return *this;
+}
+
+
+MacroButton& MacroButton::onMultiClick(
+    IMacro& macro)
+{
+    multiClickMacro = &macro;
+
+    return *this;
+}
+
+
+MacroButton& MacroButton::onLongPressStart(
+    IMacro& macro)
+{
+    longPressStartMacro = &macro;
+
+    return *this;
+}
+
+
+MacroButton& MacroButton::onLongPress(
+    IMacro& macro)
+{
+    longPressMacro = &macro;
+
+    return *this;
+}
+
+
+MacroButton& MacroButton::onLongPressStop(
+    IMacro& macro)
+{
+    longPressStopMacro = &macro;
+
+    return *this;
+}
+
+
+// ============================================================
+// Button listener registration
 // ============================================================
 
 void MacroButton::addButtonListener(
@@ -142,7 +259,34 @@ void MacroButton::addButtonListener(
 }
 
 
-void MacroButton::notifyButtonPress()
+// ============================================================
+// Physical press
+// ============================================================
+
+void MacroButton::handlePress()
+{
+    if (gesturesSuppressedFlag)
+        gesturesSuppressedFlag = false;
+
+    notifyPress();
+}
+
+
+// ============================================================
+// Physical release
+// ============================================================
+
+void MacroButton::handleRelease()
+{
+    notifyRelease();
+}
+
+
+// ============================================================
+// Notify press
+// ============================================================
+
+void MacroButton::notifyPress()
 {
     for (IButtonListener* listener : listeners)
     {
@@ -154,7 +298,11 @@ void MacroButton::notifyButtonPress()
 }
 
 
-void MacroButton::notifyButtonRelease()
+// ============================================================
+// Notify release
+// ============================================================
+
+void MacroButton::notifyRelease()
 {
     for (IButtonListener* listener : listeners)
     {
@@ -167,52 +315,40 @@ void MacroButton::notifyButtonRelease()
 
 
 // ============================================================
-// Macro assignments
+// Suppress gestures
 // ============================================================
 
-MacroButton& MacroButton::onClick(IMacro& macro)
+void MacroButton::suppressGestures()
 {
-    clickMacro = &macro;
-
-    return *this;
+    gesturesSuppressedFlag = true;
 }
 
 
-MacroButton& MacroButton::onDoubleClick(IMacro& macro)
-{
-    doubleClickMacro = &macro;
+// ============================================================
+// Release gesture suppression
+// ============================================================
 
-    return *this;
+void MacroButton::releaseGestures()
+{
+    /*
+     * Do not clear suppression immediately when a chord is released.
+     *
+     * OneButton can queue click/double-click/multi-click callbacks
+     * after the physical release is detected. If we clear the flag
+     * during the same release cycle, those queued events can still fire
+     * and leak the individual button gestures after the chord action.
+     *
+     * Keep the suppression active until the next real physical press,
+     * which is when a fresh gesture cycle begins.
+     */
 }
 
 
-MacroButton& MacroButton::onMultiClick(IMacro& macro)
+// ============================================================
+// Suppression state
+// ============================================================
+
+bool MacroButton::gesturesSuppressed() const
 {
-    multiClickMacro = &macro;
-
-    return *this;
-}
-
-
-MacroButton& MacroButton::onLongPressStart(IMacro& macro)
-{
-    longPressStartMacro = &macro;
-
-    return *this;
-}
-
-
-MacroButton& MacroButton::onLongPressStop(IMacro& macro)
-{
-    longPressStopMacro = &macro;
-
-    return *this;
-}
-
-
-MacroButton& MacroButton::onLongPress(IMacro& macro)
-{
-    longPressMacro = &macro;
-
-    return *this;
+    return gesturesSuppressedFlag;
 }
