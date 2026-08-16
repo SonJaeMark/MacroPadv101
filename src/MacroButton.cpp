@@ -1,7 +1,12 @@
 #include "MacroButton.h"
 
 
-MacroButton::MacroButton(IButtonDriver& driver)
+// ============================================================
+// Constructor
+// ============================================================
+
+MacroButton::MacroButton(
+    IButtonDriver& driver)
     : driver(driver)
 {
 }
@@ -53,13 +58,34 @@ void MacroButton::begin(
             if (gesturesSuppressedFlag)
                 return;
 
-            if (clickMacro == nullptr)
-                return;
-
             if (keyboardDriver == nullptr)
                 return;
 
-            clickMacro->execute(*keyboardDriver);
+
+            // ------------------------------------------------
+            // CycleMacro has priority
+            // ------------------------------------------------
+
+            if (clickCycle != nullptr)
+            {
+                clickCycle->forwardExecute(
+                    *keyboardDriver
+                );
+
+                return;
+            }
+
+
+            // ------------------------------------------------
+            // Normal Macro
+            // ------------------------------------------------
+
+            if (clickMacro == nullptr)
+                return;
+
+            clickMacro->execute(
+                *keyboardDriver
+            );
         }
     );
 
@@ -74,13 +100,34 @@ void MacroButton::begin(
             if (gesturesSuppressedFlag)
                 return;
 
-            if (doubleClickMacro == nullptr)
-                return;
-
             if (keyboardDriver == nullptr)
                 return;
 
-            doubleClickMacro->execute(*keyboardDriver);
+
+            // ------------------------------------------------
+            // CycleMacro goes BACKWARD
+            // ------------------------------------------------
+
+            if (doubleClickCycle != nullptr)
+            {
+                doubleClickCycle->backwardExecute(
+                    *keyboardDriver
+                );
+
+                return;
+            }
+
+
+            // ------------------------------------------------
+            // Normal Macro
+            // ------------------------------------------------
+
+            if (doubleClickMacro == nullptr)
+                return;
+
+            doubleClickMacro->execute(
+                *keyboardDriver
+            );
         }
     );
 
@@ -101,7 +148,9 @@ void MacroButton::begin(
             if (keyboardDriver == nullptr)
                 return;
 
-            multiClickMacro->execute(*keyboardDriver);
+            multiClickMacro->execute(
+                *keyboardDriver
+            );
         }
     );
 
@@ -122,7 +171,9 @@ void MacroButton::begin(
             if (keyboardDriver == nullptr)
                 return;
 
-            longPressStartMacro->execute(*keyboardDriver);
+            longPressStartMacro->execute(
+                *keyboardDriver
+            );
         }
     );
 
@@ -143,7 +194,9 @@ void MacroButton::begin(
             if (keyboardDriver == nullptr)
                 return;
 
-            longPressMacro->execute(*keyboardDriver);
+            longPressMacro->execute(
+                *keyboardDriver
+            );
         }
     );
 
@@ -164,7 +217,9 @@ void MacroButton::begin(
             if (keyboardDriver == nullptr)
                 return;
 
-            longPressStopMacro->execute(*keyboardDriver);
+            longPressStopMacro->execute(
+                *keyboardDriver
+            );
         }
     );
 }
@@ -191,7 +246,7 @@ bool MacroButton::isPressed() const
 
 
 // ============================================================
-// Gesture configuration
+// Normal Macro: Click
 // ============================================================
 
 MacroButton& MacroButton::onClick(
@@ -199,18 +254,30 @@ MacroButton& MacroButton::onClick(
 {
     clickMacro = &macro;
 
+    clickCycle = nullptr;
+
     return *this;
 }
 
+
+// ============================================================
+// Normal Macro: Double Click
+// ============================================================
 
 MacroButton& MacroButton::onDoubleClick(
     IMacro& macro)
 {
     doubleClickMacro = &macro;
 
+    doubleClickCycle = nullptr;
+
     return *this;
 }
 
+
+// ============================================================
+// Normal Macro: Multi Click
+// ============================================================
 
 MacroButton& MacroButton::onMultiClick(
     IMacro& macro)
@@ -221,6 +288,10 @@ MacroButton& MacroButton::onMultiClick(
 }
 
 
+// ============================================================
+// Normal Macro: Long Press Start
+// ============================================================
+
 MacroButton& MacroButton::onLongPressStart(
     IMacro& macro)
 {
@@ -229,6 +300,10 @@ MacroButton& MacroButton::onLongPressStart(
     return *this;
 }
 
+
+// ============================================================
+// Normal Macro: Long Press
+// ============================================================
 
 MacroButton& MacroButton::onLongPress(
     IMacro& macro)
@@ -239,10 +314,44 @@ MacroButton& MacroButton::onLongPress(
 }
 
 
+// ============================================================
+// Normal Macro: Long Press Stop
+// ============================================================
+
 MacroButton& MacroButton::onLongPressStop(
     IMacro& macro)
 {
     longPressStopMacro = &macro;
+
+    return *this;
+}
+
+
+// ============================================================
+// CycleMacro: Click = FORWARD
+// ============================================================
+
+MacroButton& MacroButton::onClick(
+    CycleMacro& cycle)
+{
+    clickCycle = &cycle;
+
+    clickMacro = nullptr;
+
+    return *this;
+}
+
+
+// ============================================================
+// CycleMacro: Double Click = BACKWARD
+// ============================================================
+
+MacroButton& MacroButton::onDoubleClick(
+    CycleMacro& cycle)
+{
+    doubleClickCycle = &cycle;
+
+    doubleClickMacro = nullptr;
 
     return *this;
 }
@@ -255,7 +364,9 @@ MacroButton& MacroButton::onLongPressStop(
 void MacroButton::addButtonListener(
     IButtonListener& listener)
 {
-    listeners.push_back(&listener);
+    listeners.push_back(
+        &listener
+    );
 }
 
 
@@ -265,6 +376,12 @@ void MacroButton::addButtonListener(
 
 void MacroButton::handlePress()
 {
+    /*
+     * A new physical press begins a fresh gesture cycle.
+     *
+     * If a previous chord suppressed this button,
+     * clear suppression here.
+     */
     if (gesturesSuppressedFlag)
         gesturesSuppressedFlag = false;
 
@@ -293,7 +410,9 @@ void MacroButton::notifyPress()
         if (listener == nullptr)
             continue;
 
-        listener->onButtonPress(*this);
+        listener->onButtonPress(
+            *this
+        );
     }
 }
 
@@ -309,7 +428,9 @@ void MacroButton::notifyRelease()
         if (listener == nullptr)
             continue;
 
-        listener->onButtonRelease(*this);
+        listener->onButtonRelease(
+            *this
+        );
     }
 }
 
@@ -331,15 +452,13 @@ void MacroButton::suppressGestures()
 void MacroButton::releaseGestures()
 {
     /*
-     * Do not clear suppression immediately when a chord is released.
+     * Intentionally do nothing.
      *
-     * OneButton can queue click/double-click/multi-click callbacks
-     * after the physical release is detected. If we clear the flag
-     * during the same release cycle, those queued events can still fire
-     * and leak the individual button gestures after the chord action.
+     * OneButton may deliver the click/double-click/multi-click
+     * callback after physical release.
      *
-     * Keep the suppression active until the next real physical press,
-     * which is when a fresh gesture cycle begins.
+     * Suppression is therefore cleared on the next real
+     * physical press in handlePress().
      */
 }
 

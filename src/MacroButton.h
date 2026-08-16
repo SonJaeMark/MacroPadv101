@@ -7,6 +7,7 @@
 #include "IMacro.h"
 #include "IKeyboardDriver.h"
 #include "IButtonListener.h"
+#include "CycleMacro.h"
 
 
 class MacroButton : public IMacroButton
@@ -33,7 +34,7 @@ public:
 
 
     // ========================================================
-    // Gesture configuration
+    // Normal Macro gestures
     // ========================================================
 
     MacroButton& onClick(IMacro& macro);
@@ -47,6 +48,15 @@ public:
     MacroButton& onLongPress(IMacro& macro);
 
     MacroButton& onLongPressStop(IMacro& macro);
+
+
+    // ========================================================
+    // CycleMacro gestures
+    // ========================================================
+
+    MacroButton& onClick(CycleMacro& cycle);
+
+    MacroButton& onDoubleClick(CycleMacro& cycle);
 
 
     // ========================================================
@@ -80,7 +90,7 @@ private:
 
 
     // ========================================================
-    // Gesture macros
+    // Normal gesture macros
     // ========================================================
 
     IMacro* clickMacro = nullptr;
@@ -97,7 +107,16 @@ private:
 
 
     // ========================================================
-    // Button listeners
+    // Cycle macros
+    // ========================================================
+
+    CycleMacro* clickCycle = nullptr;
+
+    CycleMacro* doubleClickCycle = nullptr;
+
+
+    // ========================================================
+    // Listeners
     // ========================================================
 
     std::vector<IButtonListener*> listeners;
