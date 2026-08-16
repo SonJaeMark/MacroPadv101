@@ -21,7 +21,7 @@ public:
     // Lifecycle
     // ========================================================
 
-    void begin(IKeyboardDriver& keyboard);
+    void begin(IKeyboardDriver& keyboard) override;
 
     void tick() override;
 
@@ -64,7 +64,7 @@ public:
     // ========================================================
 
     void addButtonListener(
-        IButtonListener& listener);
+        IButtonListener& listener) override;
 
 
     // ========================================================
